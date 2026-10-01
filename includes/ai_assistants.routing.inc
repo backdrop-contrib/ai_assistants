@@ -245,7 +245,7 @@ function ai_assistants_model_route_plan(array $assistant, $message, array $threa
       'operation' => 'ai_assistants_router',
     ]);
   }
-  catch (\Exception $e) {
+  catch (\Throwable $e) {
     watchdog('ai_assistants', 'Model router failed and will use fallback routing: @error', ['@error' => $e->getMessage()], WATCHDOG_WARNING);
     return NULL;
   }

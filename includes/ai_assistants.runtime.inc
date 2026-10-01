@@ -9,7 +9,18 @@
  */
 
 function ai_assistants_default_model(array $assistant = []) {
-  return !empty($assistant['model']) ? (string) $assistant['model'] : '';
+  if (!empty($assistant['model'])) {
+    return (string) $assistant['model'];
+  }
+  $configured = trim((string) config_get('ai.settings', 'default_tool_calling_model'));
+  if ($configured === '') {
+    $configured = trim((string) config_get('ai.settings', 'default_chat_model'));
+  }
+  if ($configured !== '') {
+    return $configured;
+  }
+  $models = function_exists('ai_get_all_chat_models') ? ai_get_all_chat_models() : [];
+  return function_exists('ai_default_model') ? ai_default_model($models) : '';
 }
 
 /**
@@ -367,9 +378,11 @@ function ai_assistants_execute_agent_plan($assistant_id, array $assistant, array
     $response['answer'] = ai_assistants_format_multi_agent_answer($results);
   }
   $response['structured'] = NULL;
-  if ($response['status'] !== 'error') {
-    $response['status'] = !empty($response['answer']) ? 'ok' : 'error';
-  }
+  // A multi-agent run starts with an error-shaped response so an empty plan
+  // can return a useful error. Once at least one backing agent has produced an
+  // answer, the combined response is successful regardless of that initial
+  // placeholder status.
+  $response['status'] = !empty($response['answer']) ? 'ok' : 'error';
   foreach ($results as $result) {
     foreach ($result['tool_calls'] as $tool_call) {
       $tool_call['agent_id'] = $result['agent_id'];
@@ -547,7 +560,7 @@ function ai_assistants_synthesize_workflow_response(array $assistant, $message, 
     $answer = is_string($answer) ? trim($answer) : trim((string) $answer);
     return $answer !== '' ? $answer : $fallback;
   }
-  catch (\Exception $e) {
+  catch (\Throwable $e) {
     watchdog('ai_assistants', 'Workflow synthesis failed, falling back to raw results: @error', ['@error' => $e->getMessage()], WATCHDOG_WARNING);
     return $fallback;
   }
@@ -681,7 +694,7 @@ function ai_assistants_send($assistant_id, $message, array $options = []) {
       $response['answer'] = is_string($answer) ? $answer : (string) $answer;
       $response['status'] = 'ok';
     }
-    catch (\Exception $e) {
+    catch (\Throwable $e) {
       $response['error'] = $e->getMessage();
     }
   }
