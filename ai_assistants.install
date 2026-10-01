@@ -8,16 +8,23 @@ function ai_assistants_install() {
   ai_upgrade_module_install('ai_assistant');
 }
 
+/**
+ * Implements hook_uninstall().
+ */
+function ai_assistants_uninstall() {
+  // Per-assistant configs are not declared in hook_config_info() (they carry
+  // no id attribute for a name_key), so core does not remove them.
+  foreach (config_get_names_with_prefix('ai_assistants.assistant.') as $config_name) {
+    config($config_name)->delete();
+  }
+}
+
 
 /**
- * Re-migrate openai_assistant.settings → ai_assistants.settings stripping openai/ prefix.
+ * Superseded by ai_assistants_update_1003().
  */
 function ai_assistants_update_1000() {
-  if (!module_load_install('ai_upgrade')) { return []; }
-  if (function_exists('_ai_transform_assistant_config')) {
-    _ai_migrate_config_object('openai_assistant.settings', 'ai_assistants.settings', '_ai_transform_assistant_config', TRUE);
-  }
-  return t('Re-migrated assistant config: stripped openai/ provider prefix from model fields.');
+  return t('Superseded by update 1003.');
 }
 
 /**
@@ -53,6 +60,39 @@ function ai_assistants_update_1002() {
     db_add_index('ai_assistants_thread', 'assistant_id_updated', ['assistant_id', 'updated']);
   }
   return t('Replaced assistant_id index with compound assistant_id_updated index on ai_assistants_thread.');
+}
+
+/**
+ * Qualify unprefixed assistant models as openai/<model>.
+ *
+ * The legacy suite sent unprefixed models to OpenAI; the AI suite sends them
+ * to the first enabled provider. The admin UI always saves prefixed IDs, so
+ * unprefixed values can only come from migrated legacy config.
+ */
+function ai_assistants_update_1003() {
+  if (!module_load_install('ai_upgrade')) {
+    return t('AI Upgrade helpers unavailable; assistant models not checked.');
+  }
+  $changed = 0;
+
+  $settings = config('ai_assistants.settings');
+  $legacy = $settings->get('assistants');
+  if (is_array($legacy) && ($count = _ai_upgrade_qualify_item_models($legacy))) {
+    $settings->set('assistants', $legacy)->save();
+    $changed += $count;
+  }
+
+  foreach (config_get_names_with_prefix('ai_assistants.assistant.') as $name) {
+    $config = config($name);
+    $model = $config->get('model');
+    $qualified = _ai_upgrade_qualify_model($model);
+    if ($qualified !== $model) {
+      $config->set('model', $qualified)->save();
+      $changed++;
+    }
+  }
+
+  return t('Qualified @count unprefixed assistant model(s) with the openai/ provider prefix.', ['@count' => $changed]);
 }
 
 /**

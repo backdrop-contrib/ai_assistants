@@ -87,7 +87,7 @@ function ai_assistants_admin_edit_form($form, &$form_state, $assistant_id = '') 
 
   $pre_action_description = t('Used as the router system prompt in router/multi_agent modes (decides which backing agent(s) handle each request) and as an extra system message in direct mode. Leave empty to use the default router template. The template supports the placeholders [examples] and [usage_instructions], which are filled at runtime by aggregating the corresponding fields from each available agent. The model also receives the full agent manifest (description, tools, declared orchestration metadata) in the user message, so the prompt itself never needs to name specific agents.');
   if (function_exists('ai_assistants_default_router_prompt')) {
-    $pre_action_description .= '<br><br><strong>' . t('Current default:') . '</strong><br><pre style="white-space:pre-wrap;font-size:0.85em;background:#f7f7f7;padding:0.5em;border:1px solid #ddd;max-height:240px;overflow:auto;">' . check_plain(ai_assistants_default_router_prompt()) . '</pre>';
+    $pre_action_description .= '<br><br><strong>' . t('Current default:') . '</strong><br><pre style="white-space:pre-wrap;font-size:0.85em;background:var(--gin-bg-layer2,#f7f7f7);color:var(--gin-color-text,inherit);padding:0.5em;border:1px solid var(--gin-border-color,#ddd);max-height:240px;overflow:auto;">' . check_plain(ai_assistants_default_router_prompt()) . '</pre>';
   }
   $form['pre_action_prompt'] = [
     '#type' => 'textarea',

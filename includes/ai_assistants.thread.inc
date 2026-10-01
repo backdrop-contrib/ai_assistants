@@ -346,7 +346,19 @@ function ai_assistants_compose_message(array $messages, $message) {
     if (empty($entry['role'])) {
       continue;
     }
-    $parts[] = strtoupper((string) $entry['role']) . ': ' . (isset($entry['content']) ? (string) $entry['content'] : '');
+    // These labels are serialized into an agent's user message. Do not use
+    // protocol-looking labels such as "SYSTEM:" here: the input guardrail
+    // intentionally blocks system-delimiter mimicry, and would otherwise
+    // mistake our own thread context for prompt injection.
+    $role_labels = [
+      'system' => 'THREAD_SYSTEM_CONTEXT',
+      'user' => 'THREAD_USER_MESSAGE',
+      'assistant' => 'THREAD_ASSISTANT_MESSAGE',
+      'tool' => 'THREAD_TOOL_RESULT',
+    ];
+    $role = (string) $entry['role'];
+    $label = isset($role_labels[$role]) ? $role_labels[$role] : 'THREAD_' . strtoupper($role);
+    $parts[] = $label . ': ' . (isset($entry['content']) ? (string) $entry['content'] : '');
   }
   $parts[] = 'CURRENT_USER_MESSAGE: ' . (string) $message;
   return implode("\n\n", $parts);
