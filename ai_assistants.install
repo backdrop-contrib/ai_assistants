@@ -12,8 +12,8 @@ function ai_assistants_install() {
  * Implements hook_uninstall().
  */
 function ai_assistants_uninstall() {
-  // Per-assistant configs are not declared in hook_config_info() (they carry
-  // no id attribute for a name_key), so core does not remove them.
+  // Per-assistant configs are declared in hook_config_info() without a
+  // name_key (they carry no id attribute), so core does not remove them.
   foreach (config_get_names_with_prefix('ai_assistants.assistant.') as $config_name) {
     config($config_name)->delete();
   }

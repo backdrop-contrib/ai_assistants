@@ -21,6 +21,10 @@ function ai_assistants_config_info() {
       'label' => t('AI Assistant settings'),
       'group' => t('AI'),
     ],
+    'ai_assistants.assistant' => [
+      'label_key' => 'label',
+      'group' => t('AI'),
+    ],
   ];
 }
 
