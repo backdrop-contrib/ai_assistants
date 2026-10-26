@@ -96,61 +96,6 @@ function ai_assistants_update_1003() {
 }
 
 /**
- * Implements hook_update_dependencies().
- */
-function ai_assistants_update_dependencies() {
-  // Update 1004 routes to agents that ai_agents_update_1005() creates.
-  $dependencies['ai_assistants'][1004] = [
-    'ai_agents' => 1005,
-  ];
-  return $dependencies;
-}
-
-/**
- * Route the default assistant to the node, paragraph, menu, and layout agents.
- *
- * Only these agents are added: they were never shipped before, so an admin
- * cannot have removed them on purpose. The delete sentence in the system
- * prompt is replaced only if the prompt still has the shipped wording.
- */
-function ai_assistants_update_1004() {
-  $config = config('ai_assistants.assistant.backdrop_agent_assistant');
-  if ($config->isNew()) {
-    return t('Default assistant not present; nothing to update.');
-  }
-
-  $existing_agents = module_exists('ai_agents') ? config_get('ai_agents.settings', 'agents') : [];
-  $agent_ids = $config->get('agent_ids');
-  $agent_ids = is_array($agent_ids) ? $agent_ids : [];
-  $added = [];
-  foreach (['node_agent', 'paragraph_agent', 'menu_agent', 'layout_agent'] as $agent_id) {
-    if (isset($existing_agents[$agent_id]) && !in_array($agent_id, $agent_ids, TRUE)) {
-      $agent_ids[] = $agent_id;
-      $added[] = $agent_id;
-    }
-  }
-  if ($added) {
-    $config->set('agent_ids', $agent_ids);
-  }
-
-  $old = '(For now you cannot delete anything yourself — tell them and offer to walk them through it.)';
-  $new = '(You can only delete menu links and remove blocks from layouts, and only after the user approves. For anything else, tell them and offer to walk them through it.)';
-  $prompt = (string) $config->get('system_prompt');
-  $prompt_updated = strpos($prompt, $old) !== FALSE;
-  if ($prompt_updated) {
-    $config->set('system_prompt', str_replace($old, $new, $prompt));
-  }
-
-  if ($added || $prompt_updated) {
-    $config->save();
-  }
-  return t('Default assistant: added @agents; delete guidance @prompt.', [
-    '@agents' => $added ? implode(', ', $added) : t('no agents'),
-    '@prompt' => $prompt_updated ? t('updated') : t('left unchanged'),
-  ]);
-}
-
-/**
  * Implements hook_requirements().
  */
 function ai_assistants_requirements($phase) {
