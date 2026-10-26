@@ -119,8 +119,8 @@ function ai_assistants_admin_edit_form($form, &$form_state, $assistant_id = '') 
   $form['model'] = [
     '#type' => 'select',
     '#title' => t('Direct answer model'),
-    '#options' => function_exists('ai_get_all_chat_models') ? ai_get_all_chat_models() : [],
-    '#default_value' => isset($assistant['model']) ? $assistant['model'] : ai_assistants_default_model($assistant),
+    '#options' => ai_model_options_with_default(function_exists('ai_get_all_chat_models') ? ai_get_all_chat_models() : [], 'tool_calling'),
+    '#default_value' => isset($assistant['model']) ? $assistant['model'] : '',
     '#description' => t('Model used for direct answers and for all backing agents. Overrides each agent\'s individual model setting.'),
   ];
 
