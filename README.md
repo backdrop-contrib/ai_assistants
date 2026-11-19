@@ -1,15 +1,38 @@
 # AI Assistants
 
-`ai_assistants` is the backend/runtime module for assistant definitions.
+Create an AI assistant that answers directly or calls configured AI agents.
+Set its instructions, model, allowed roles, and conversation storage.
+[AI Chatbot](https://github.com/backdrop-contrib/ai_chatbot) can present an
+assistant in a page block.
+
+## Requirements
+
+- PHP 8.2 or later
+- `ai_agents` module
+
+## Installation
+
+Install this module using the official [Backdrop CMS instructions](https://backdropcms.org/user-guide/modules).
+
+1. Open **AI Assistants** at `admin/config/ai/ai-assistants` and add an assistant.
+2. Set the system prompt. Choose a model and route mode, then select backing
+   agents if your route uses them.
+3. Set allowed roles and thread storage, then save.
+
+Find setup, examples, and troubleshooting in the [project wiki](https://github.com/backdrop-contrib/ai_assistants/wiki).
+
+## Developer reference
+
+`ai_assistants` provides the runtime for assistant definitions.
 
 It owns:
 
-- assistant config in `ai_assistants.settings`
+- assistant configuration under `ai_assistants.assistant.*` and global settings in `ai_assistants.settings`
 - admin pages for adding/editing assistants
 - route planning for direct, single-agent, and multi-agent requests
 - backing-agent execution
 - approval resume flow
-- durable thread storage in session or database
+- optional thread storage in session or database
 
 Main files:
 
